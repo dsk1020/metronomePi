@@ -32,8 +32,8 @@ private:
 	bool m_timing;
 
 	// Insert new samples at the end of the array, removing the oldest
-	size_t m_beats[beat_samples];
-    size_t m_index = 0;
+	size_t m_beats[beat_samples]; // circular array keeping last 4 values
+    size_t m_index = 0; // keep the last index used
 	size_t m_beat_count;
 };
 
