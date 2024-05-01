@@ -37,20 +37,29 @@ void sigint_handler(int signal)
 // BPM GET returns the active bpm
 void getBPM(web::http::http_request msg) 
 {
-	msg.reply(web::http::status_codes::OK, web::json::value::number(bpmCurrent));
+	web::json::value res;
+    res[U("bpm")] = web::json::value::number(bpmCurrent);
+
+    web::http::http_response response(web::http::status_codes::OK);
+    response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
+    response.set_body(res);
+    msg.reply(response);
 
 }
 // BPM POST takes in a number and sets it as the active bpm being displayed
 void postBPM(web::http::http_request msg) 
 {
     // Get the body of the JSON message
-	msg.extract_json().then([msg](web::json::value body) 
+    
+	msg.extract_json().then([=](web::json::value body) 
 	{
         // convert the body to an integer
 		int temp = body.as_integer();
         if(temp < 0) // if negative send back BadRequest:400 as this will overflow the size_t
         {
-           msg.reply(web::http::status_codes::BadRequest, body); 
+            web::http::http_response response(web::http::status_codes::BadRequest);
+            response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
+            msg.reply(response);
         }
         else
         {
@@ -70,7 +79,9 @@ void postBPM(web::http::http_request msg)
                 bpmMin = bpmCurrent;
             }
             blinkInterval = 60000 / bpmCurrent; // calculate the interval of each bpm to milliseconds for the play function
-		    msg.reply(web::http::status_codes::OK, body);
+		    web::http::http_response response(web::http::status_codes::OK);
+            response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
+            msg.reply(response);
         }
 	});
 }
@@ -78,25 +89,49 @@ void postBPM(web::http::http_request msg)
 // Return the current min bpm
 void getMIN(web::http::http_request msg) 
 {
-	msg.reply(web::http::status_codes::OK, web::json::value::number(bpmMin));
+    web::json::value res;
+    res[U("bpm")] = web::json::value::number(bpmMin);
+
+    web::http::http_response response(web::http::status_codes::OK);
+    response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
+    response.set_body(res);
+    msg.reply(response);
 }
 // reset the min bpm to 0
 void delMIN(web::http::http_request msg) 
 {
     bpmMin = 0;
-	msg.reply(web::http::status_codes::OK);
+    web::json::value res;
+    res[U("bpm")] = web::json::value::number(bpmMin);
+
+    web::http::http_response response(web::http::status_codes::OK);
+    response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
+    response.set_body(res);
+    msg.reply(response);
 }
 
 // Return the current max bpm
 void getMAX(web::http::http_request msg) 
 {
-	msg.reply(web::http::status_codes::OK, web::json::value::number(bpmMax));
+    web::json::value res;
+    res[U("bpm")] = web::json::value::number(bpmMax);
+
+	web::http::http_response response(web::http::status_codes::OK);
+    response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
+    response.set_body(res);
+    msg.reply(response);
 }
 // Reset the max bpm to 0 
 void delMAX(web::http::http_request msg) 
 {
     bpmMax = 0;
-	msg.reply(web::http::status_codes::OK);
+    web::json::value res;
+    res[U("bpm")] = web::json::value::number(bpmMax);
+
+	web::http::http_response response(web::http::status_codes::OK);
+    response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
+    response.set_body(res);
+    msg.reply(response);
 }
 
 //---------- PI Functionality ----------//
@@ -233,11 +268,16 @@ int main()
                     bpmCurrent = static_cast<int>(round(sec)); // round to get clean number
 
                     // set min and max values
-                    if(bpmCurrent > bpmMax) 
+                    if(bpmMax == 0 && bpmMin == 0)
+                    {
+                        bpmMax = bpmCurrent;
+                        bpmMin = bpmCurrent;
+                    }
+                    else if(bpmCurrent > bpmMax)
                     {
                         bpmMax = bpmCurrent;
                     }
-                    else if(bpmCurrent < bpmMin || bpmMin == 0)
+                    else if(bpmCurrent < bpmMin)
                     {
                         bpmMin = bpmCurrent;
                     }
